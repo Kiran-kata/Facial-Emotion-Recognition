@@ -19,7 +19,7 @@ def get_tflite_model_predictions(tflite_model_path, image_data):
     output_details = interpreter.get_output_details()
 
     # Collect model's predictions for the input data
-    y_pred = np.zeros(len(image_data), dtype = np.int)
+    y_pred = np.zeros(len(image_data), dtype = np.int32)
 
     # Model takes in images one by one
     for i in range(len(image_data)):

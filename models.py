@@ -2,7 +2,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential, Model
 
-from keras.regularizers import l2
+from tensorflow.keras.regularizers import l2
 
 
 def get_smart_model(input,

@@ -1,89 +1,460 @@
-# Facial Emotion Recognition Model
+# 😊 EmoSense — Facial Emotion Recognition
 
-As a continuation of my master's thesis on "*Deep learning in facial emotion recognition*", I built an efficient model for emotion recognition. I trained it on the FER-Plus dataset and created an [Android app](https://github.com/vicksam/fer-app) for it.
+> Detect human emotions from faces in real time using deep learning and computer vision.
 
-### Overview
+EmoSense is a Python-based web application that identifies emotions from live webcam input or uploaded images. It uses a trained TensorFlow Lite model to detect facial expressions and classify them into multiple emotion categories with confidence scores. The project combines deep learning, OpenCV face detection, and a lightweight Flask web interface to provide a simple and interactive emotion recognition experience.
 
-I've always been interested in both psychology and computers and found the idea that computers can learn social skills really inspiring. It led me to writing my master thesis and to putting it into practice here. Through many experiments and read papers, I've managed to find an effective architecture. And it outperforms models from some of those works.
+---
 
-### Architecture (CNN)
+## Overview
 
-<img src="images/architecture.png">
+This project demonstrates how a Convolutional Neural Network (CNN) can be trained and deployed to recognize facial emotions from grayscale face crops. It is designed for experimentation, learning, and real-time demos in browser-based applications.
 
-### Results
+The system can:
 
-#### FER-Plus dataset
+- detect faces in an image or webcam stream,
+- preprocess them into the required model format,
+- classify the dominant emotion,
+- display probability scores for each emotion,
+- return annotated results in the frontend.
 
-Here I present performance of my model for majority voting (MV) and probability distribution (PD) labels. Each score is a mean over 5 training runs ± standard deviation.
+It recognizes the following emotions:
 
-| Label | Spatial dropout rate | Accuracy        | Loss            | Best result (acc \| loss) |
-| :---- | :------------------- | :-------------: | :-------------: | :-----------------------: |
-| PD    | 0.10                 | 0.8704 ± 0.0040 | 0.3679 ± 0.0054 | 0.8766 \| 0.3629          |
-| MV    | 0.10                 | 0.8656 ± 0.0024 | 0.4152 ± 0.0036 | 0.8687 \| 0.4135          |
+| Emotion | Description |
+|---|---|
+| 😄 Happiness | Smiling expression with positive visual cues |
+| 😢 Sadness | Downturned facial features and low-energy expression |
+| 😠 Anger | Tense jaw, intense expression |
+| 😲 Surprise | Wide eyes and open-mouth look |
+| 😐 Neutral | Calm or neutral expression |
+| 😨 Fear | Alert, tense, worried expression |
+| 🤢 Disgust | Wrinkled nose or aversive expression |
+| 😏 Contempt | Slightly asymmetrical smirk |
 
-The model performs the best when using PD labels. What I mean exactly by this is that I train it on PD labels, but test it using MV labels. It seems that trying to approximate the probability distribution during training, translates to a better score when performing classification later.
+---
 
-#### FER dataset
+## Features
 
-For a comparison with other models, I also included results on the FER dataset.
+### Existing Features
+- Real-time webcam emotion recognition
+- Upload image-based emotion analysis
+- Face detection using OpenCV Haar cascades
+- Prediction of the dominant emotion and confidence score
+- Display of all emotion probabilities
+- Annotated image output with bounding boxes and labels
+- Lightweight TensorFlow Lite inference model
+- Browser-based UI using Flask, HTML, CSS, and JavaScript
 
-| Label | Spatial dropout rate | Accuracy        | Loss            | Best result (acc \| loss) |
-| :---- | :------------------- | :-------------: | :-------------: | :-----------------------: |
-| MV    | 0.05                 | 0.6857 ± 0.0065 | 0.8820 ± 0.0119 | 0.6945 \| 0.8673          |
+### Functional Workflow
+1. Capture an image from webcam or upload an image.
+2. Detect one or more faces in the frame.
+3. Crop each face and convert it to the required model input format.
+4. Run inference using the TensorFlow Lite model.
+5. Predict the emotion with the highest probability.
+6. Display the emotional result and output image with annotations.
 
-#### Comparison with research papers
+---
 
-| Architecture      | Accuracy MV (FER+) | Accuracy PD (FER+) | Accuracy (FER) | Parameters    |
-| :---------------- | :----------------: | :----------------: | :------------: | ------------: |
-| SHCNN [1]         | -                  | 0.8654             | 0.6910         | 8.71 mil      |
-| Mini-Xception [2] | -                  | -                  | 0.66           | ~0.06 mil     |
-| VGG13 [3]         | 0.8489             | 0.8543             | -              | ~8.75 mil*    |
-| **My result**     | **0.8687**         | **0.8766**         | **0.6945**     | **0.17 mil**  |
+## How It Works
 
-My results are the best among the mentioned papers. The model is also very compact compared to the other ones. Although mini-Xception is even smaller, its accuracy is significantly lower.
+The app follows a classic computer vision pipeline:
 
-### How to use
+1. Input image is received from the browser.
+2. OpenCV detects the face region.
+3. The detected face is resized to 48x48 grayscale.
+4. The image is normalized and fed into the model.
+5. The model predicts a probability distribution over emotion classes.
+6. The class with the highest probability is chosen as the prediction.
 
-To present how the model works in practice, I've built an [Android app](https://github.com/vicksam/fer-app) that uses it.
+The model is a CNN that learns visual patterns such as edges, shapes, and facial features. It combines these cues to infer emotion from expressions like mouth curvature, eye openness, and brow tension.
 
-If you want to reproduce my results, the notebook file `fer_model.ipynb` is ready to be run on Google Colab. You just need to clone this repo to colab and provide the [FER](https://www.kaggle.com/c/challenges-in-representation-learning-facial-expression-recognition-challenge/) and [FER-Plus](https://github.com/microsoft/FERPlus) datasets. It is quite simple. By following the links, get `fer2013.csv` and `fer2013new.csv` files and put them in the `dataset` directory.
+<p align="center">
+  <img src="images/Facial%20Emotion%20Recognition.png" alt="Facial emotion recognition pipeline" width="850"/>
+</p>
 
-I also provided the trained model files with my best results from the table. You can find them in the `model` directory along with their training history (`.json` documents). The best model is also converted to `.tflite`. And it is the file that I use in the mobile app.
+---
 
-### Papers with biggest impact
+## Tech Stack
 
-The works of Si Miao, et al. [1] and Octavio Arriaga, et al. [2] had a biggest impact on my project. The first one gave me a rough idea on what layer's size and hyperparameter's values could be effective. It also made me stick to *Leaky ReLU* instead of regular *ReLU* activation. Thanks to this, the network could converge at lower loss values than before. From the second paper, I learned how to build an efficient CNN architecture with fewer parameters. It inspired me to use *separable convolution* instead of regular convolution and *global average pooling* instead of a few fully-connected layers. This vastly reduced the number of model's parameters, mainly from dropping FC layers as they account for majority of CNN's parameters.
+| Component | Technology |
+|---|---|
+| Deep Learning | TensorFlow, Keras |
+| Model Deployment | TensorFlow Lite |
+| Face Detection | OpenCV |
+| Web Framework | Flask |
+| Frontend | HTML, CSS, JavaScript |
+| Data Processing | NumPy |
+| Training Dataset | FER+ |
 
-I applied data pre-processing as in the original FER-Plus paper [3] and also learned from it about different ways of handling the dataset's labels . I decided to use majority voting (MV) and probability distribution (PD) labels as they gave me the best results.
+---
 
-I also experimented with a number of things like:
-* ResNet gates, as in [2]
-* Probabilistic label drawing, as in [3]
-* Concatenating two networks to process in parallel original images with their LBP transformed version [4]
+## Project Structure
 
-But these approaches didn't bring a significant improvement, at least in my tests.
+```bash
+Facial Emotion Recognition/
+├── app.py                     # Flask web app and inference pipeline
+├── models.py                  # CNN model architecture used in training
+├── predictions.py             # Prediction and visualization helpers
+├── tflite_utils.py            # TensorFlow Lite utility functions
+├── requirements.txt           # Python dependencies
+├── README.md                  # Project documentation
+├── model/
+│   ├── ferplus_model_pd_best.tflite
+│   ├── ferplus_model_pd_best.json
+│   ├── fer_model_best.h5
+│   └── ...
+├── data/
+│   ├── __init__.py
+│   ├── data.py
+│   ├── dataset.py
+│   └── outliers_processing.py
+├── templates/
+│   └── index.html             # Frontend interface
+├── static/
+│   ├── style.css              # Styling for the app
+│   └── script.js              # Javascript for webcam and upload logic
+├── images/
+│   └── Facial Emotion Recognition.png
+└── .gitignore
+```
 
-### Conclusions
+---
 
-If you take a look at the confusion matrix, there are high imbalances in the training set.
+## Installation and Run
 
-<img src="images/conf_matrix.png">
+Make sure Python is installed, then run:
 
-It makes the model perform badly when it comes to `disgust`, `fear` and `contempt`, because there are not enough training examples. This can be fixed by using sample weights, so that these classes weigh more, but it would make the overall accuracy go down. On the other hand, you can expect to model to perform the best with `neutral` and `happy` expressions as they have the most examples.
+```bash
+pip install -r requirements.txt
+python app.py
+```
 
-Small number of parameters translates to a small model size. The converted *.tflite* file is only 692 kB which makes it suitable for deploying on mobile devices.
+Open the browser and visit:
 
-I've experimented with a number of tricks and unconventional approaches that I've found in research papers but with no real improvement. That's why I believe that the way to improve the model is to use a newer CNN architecture.
+```bash
+http://127.0.0.1:5000
+```
 
-### Datasets
+Then either:
+- use the webcam,
+- or upload an image,
+- and click Analyze to get the emotion prediction.
 
-The original FER dataset was used during kaggle competition on facial expression recognition in 2013. It contains 35,887 of 48x48 grayscale images of human faces. Each picture presents one of 7 emotional states (angry, disgust, fear, happy, sad, surprise or neutral). However, the labeling was not very accurate which limited the possible results.
+---
 
-The labeling was improved in 2016 using crowd sourcing [3]. The original dataset but with new labels was called FER-Plus. This improved version enabled better results and added one additional category (contempt).
+## Use Cases
 
-### References
+This technology can be used in a wide range of real-world applications:
 
-[1] Si Miao, et al. *Recognizing Facial Expressions Using a Shallow Convolutional Neural Network*, 2019, DOI: [10.1109/ACCESS.2019.2921220](https://doi.org/10.1109/ACCESS.2019.2921220).\
-[2] Octavio Arriaga, et al., *Real-time Convolutional Neural Networks for Emotion and Gender Classification*, 2017, [arXiv:1710.07557](https://arxiv.org/abs/1710.07557).\
-[3] Emad Barsoum, et al., *Training Deep Networks for Facial Expression Recognition with Crowd-Sourced Label Distribution*, 2016, [arXiv:1608.01041](https://arxiv.org/abs/1608.01041).\
-[4] Biao Yang, et al., *Facial Expression Recognition Using Weighted Mixture Deep Neural Network Based on Double-Channel Facial Images*, 2017, DOI: [10.1109/ACCESS.2017.2784096](https://doi.org/10.1109/ACCESS.2017.2784096).
+### Education
+- Detect student engagement and confusion during online classes
+- Support adaptive learning systems
+
+### Healthcare
+- Monitor emotional states in therapy sessions
+- Assist in research related to behavioral and emotional analysis
+
+### Retail and Customer Experience
+- Measure reactions to products and advertisements
+- Understand customer mood in stores and digital experiences
+
+### Driver Safety
+- Detect drowsiness, stress, or distraction in drivers
+- Improve safety in vehicles and transport systems
+
+### Gaming and Entertainment
+- Adjust difficulty based on player emotion
+- Personalize content and recommendations
+
+### Security and Surveillance
+- Detect suspicious or distressed behavior in public areas
+- Support safety monitoring systems
+
+### Customer Service
+- Analyze emotional states during video calls
+- Improve customer support interaction quality
+
+---
+
+## Accuracy and Limitations
+
+The model has shown strong performance on benchmark datasets and can achieve high accuracy in controlled conditions. In the current implementation, accuracy is influenced by factors such as:
+
+- lighting quality,
+- face orientation,
+- camera resolution,
+- occlusions such as glasses or masks,
+- expression ambiguity.
+
+Emotion recognition is not perfect because emotions are complex and often context-dependent. The model predicts visible facial patterns, not necessarily the full internal emotional state of a person.
+
+The current model has been reported to achieve approximately:
+
+| Metric | Accuracy |
+|---|---|
+| Probability Distribution (PD) | 87.7% |
+| Majority Vote (MV) | 86.9% |
+
+---
+
+## Future Improvements and Features
+
+### Model Improvements
+- Train on more diverse datasets with varied age groups and ethnic backgrounds
+- Add data augmentation such as rotation, brightness adjustment, and flips
+- Use stronger architectures like EfficientNet, MobileNet, or Vision Transformer
+- Improve face alignment and landmark detection
+- Explore ensemble methods for more robust predictions
+
+### Feature Additions
+- Multi-face emotion recognition in a single frame
+- Real-time emotion timeline and trend charts
+- Video upload support for analysis over time
+- Emotion logging and user history dashboard
+- Age and gender estimation alongside emotion recognition
+- Voice-based emotion analysis using speech data
+- Multi-modal AI combining face, voice, and text
+- Alerts for distress or abnormal emotional behavior
+- Mobile app support for Android and iOS
+- Cloud deployment on AWS, Azure, or Google Cloud
+
+### UI/UX Enhancements
+- Modern dashboard with charts and visual analytics
+- Dark mode and responsive layout
+- Better user feedback and error handling
+- Downloadable result reports in JSON or CSV format
+
+### Integration Opportunities
+- Google MediaPipe Face Mesh
+- OpenAI Whisper for audio emotion analysis
+- DeepFace and other pre-trained emotion recognition systems
+- AWS Rekognition and Azure Face API for cloud-based analysis
+- YOLOv8 for real-time detection in crowded scenes
+
+---
+
+## Ethical Considerations
+
+- Always obtain consent before analyzing a person’s face.
+- Use the system responsibly and transparently.
+- Avoid using emotion detection in ways that could be invasive or discriminatory.
+- Treat predictions as supportive tools, not absolute truth.
+
+---
+
+## Conclusion
+
+EmoSense is a practical and educational project that combines computer vision, machine learning, and web development to build a working facial emotion recognition application. It provides a strong foundation for future extensions in AI, human-computer interaction, healthcare, customer analytics, and smart systems.
+
+---
+
+*Built with Python, TensorFlow, OpenCV, and Flask.*
+---
+
+## ⚠️ Things to Keep in Mind
+
+- **Privacy matters** — always get consent before analysing someone's face
+- **Not perfect** — emotions are complex; this AI reads visible expressions, not inner feelings
+- **Lighting affects accuracy** — works best in good, even lighting
+- **Use responsibly** — this technology should help people, not surveil or judge them
+
+---
+
+*Built with [Python](https://www.python.org/) · [TensorFlow](https://www.tensorflow.org/) · [Flask](https://flask.palletsprojects.com/) · [OpenCV](https://opencv.org/)*
+
+
+---
+
+## 🤔 What Does It Actually Do?
+
+Imagine you show the app a photo of your friend, or point your webcam at yourself. Within a second, the app will:
+
+1. **Find faces** in the image automatically
+2. **Analyse the expressions** on those faces
+3. **Tell you the emotion** — with a confidence score and a colour-coded bar chart
+
+It can detect **8 different emotions**:
+
+| Emotion | What it looks like |
+|---|---|
+| 😄 Happiness | Smiling, bright eyes |
+| 😢 Sadness | Frowning, drooping face |
+| 😠 Anger | Furrowed brows, tense jaw |
+| 😲 Surprise | Wide eyes, open mouth |
+| 😐 Neutral | Relaxed, no strong expression |
+| 😨 Fear | Eyes wide, tense |
+| 🤢 Disgust | Wrinkled nose, curled lip |
+| 😏 Contempt | One-sided smirk |
+
+---
+
+## 🚀 How to Run It
+
+**You only need Python installed.**
+
+```bash
+# 1. Install the required packages
+pip install -r requirements.txt
+
+# 2. Start the app
+python app.py
+
+# 3. Open your browser and go to:
+#    http://127.0.0.1:5000
+```
+
+That's it! The app opens in your browser. Choose **Webcam** or **Upload an image** and hit Analyse.
+
+---
+
+## 🧠 How Was It Built? (Simple Explanation)
+
+Think of the AI here like a very well-trained student who has studied **35,000+ photos** of human faces and learnt what expressions look like. Here is how it was taught:
+
+### Step 1 — Gather Photos
+Researchers collected tens of thousands of face photos and had people label them with emotions. This collection is called the **FER+ dataset**.
+
+### Step 2 — Train the AI Brain (CNN)
+The app uses a type of AI called a **Convolutional Neural Network (CNN)** — it works a bit like how your eyes work. It looks at small patches of a face, finds patterns (eyebrows raised? corners of mouth up?), and combines all those clues to make a decision.
+
+### Step 3 — Build the Web App
+Once the AI was trained, it was saved into a tiny file (`ferplus_model_pd_best.tflite` — only 692 KB, smaller than most photos!). A simple web server built with **Flask** (a Python tool) loads this file and serves the app in your browser. OpenCV handles face detection using your camera or uploaded images.
+
+### The Tech Stack at a Glance
+
+| What | Tool Used |
+|---|---|
+| AI / Deep Learning | TensorFlow & Keras |
+| Face Detection | OpenCV |
+| Web Server | Flask (Python) |
+| Frontend | HTML · CSS · JavaScript |
+| Model file | TFLite (692 KB) |
+
+---
+
+## 📁 What's in This Project?
+
+```
+📦 facial-recognition-model/
+├── app.py               ← The web server (brain of the app)
+├── models.py            ← CNN model architecture definition
+├── tflite_utils.py      ← Helper for running the AI model
+├── predictions.py       ← Helper for visualising results
+├── fer_model.ipynb      ← Training notebook (for researchers)
+├── requirements.txt     ← List of Python packages needed
+├── model/               ← Trained AI model files
+│   └── ferplus_model_pd_best.tflite
+├── templates/
+│   └── index.html       ← The web page
+├── static/
+│   ├── style.css        ← Visual design
+│   └── script.js        ← Page behaviour
+└── data/                ← Dataset helpers (for training)
+```
+
+---
+
+## 🌍 Where Can This Be Used?
+
+This technology has real-world uses everywhere people interact with cameras:
+
+### 🏫 Education
+- Detect if students are confused, bored, or engaged during online classes
+- Help teachers understand the mood of a classroom in real time
+
+### 🏥 Healthcare & Mental Health
+- Monitor patients' emotional states during therapy sessions
+- Assist in diagnosing conditions where facial expressions are affected (e.g. autism research)
+- Alert caregivers if a patient shows signs of distress or pain
+
+### 🛍️ Retail & Customer Experience
+- Measure customer reactions to products, ads, or store layouts
+- Personalise shopping experiences based on mood
+
+### 🚗 Driver Safety
+- Detect drowsiness, frustration, or distraction in drivers
+- Trigger alerts before accidents happen in cars, trucks, or trains
+
+### 🎮 Gaming & Entertainment
+- Adapt game difficulty based on whether a player is stressed or bored
+- Personalise movie or music recommendations based on your mood
+
+### 🔒 Security & Surveillance
+- Detect aggressive or fearful behaviour in public spaces via CCTV
+- Flag unusual emotional patterns at airports, banks, or venues
+
+### 📞 Customer Service & Call Centres
+- Analyse emotions during video calls to help agents respond better
+- Measure satisfaction in real time during conversations
+
+### 🏠 Smart Home
+- Adjust lighting, music, or temperature based on detected mood
+- Build empathetic AI assistants that respond to how you feel
+
+---
+
+## 🔧 Possible Upgrades & Improvements
+
+Here are ideas to make EmoSense even smarter:
+
+### Better AI Models
+| Upgrade | What it means |
+|---|---|
+| **Transformer models** (like ViT) | Newer, more powerful AI that understands context better |
+| **MediaPipe Face Mesh** | Google's tool for detecting 468 face points — much more detail |
+| **Multi-modal AI** | Combine face + voice + text for deeper emotion understanding |
+| **GPT-4 / Gemini integration** | Use large language models to describe what emotions mean in context |
+
+### More Features
+- 🎙️ **Add voice analysis** — detect emotion from tone of voice alongside face
+- 📊 **Emotion timeline** — track how emotions change over time in a session
+- 👥 **Multiple people** — analyse many faces in one frame simultaneously (group mood)
+- 📱 **Mobile app** — package the model into an iOS or Android app
+- 🌐 **Cloud deployment** — host on AWS / Google Cloud so anyone can access it online
+- 🔔 **Alerts system** — send a notification when a specific emotion (e.g. distress) is detected
+
+### Better Accuracy
+- Train on more diverse datasets with different ages, skin tones, and lighting
+- Add data augmentation (flipping, brightness changes) during training
+- Use ensemble models (combine multiple AIs and vote on the answer)
+
+---
+
+## 📊 How Accurate Is It?
+
+The model was tested on thousands of face images it had never seen before:
+
+| Emotion labels used | Accuracy |
+|---|---|
+| Probability distribution (PD) | **87.7%** |
+| Majority vote (MV) | **86.9%** |
+
+In plain English: **out of every 100 faces, it gets the right emotion about 87 times**. The emotions it's best at are *neutral* and *happiness* (most training examples). It struggles most with *disgust*, *fear*, and *contempt* because those are rarer in the training data.
+
+---
+
+## 🤖 AI Tools That Could Be Integrated
+
+| AI Tool | What It Adds |
+|---|---|
+| **Google MediaPipe** | Precise face landmark detection (better face tracking) |
+| **OpenAI Whisper** | Voice emotion detection alongside face |
+| **GPT-4 Vision** | Describe emotions in full sentences from images |
+| **DeepFace** | Pre-built emotion, age, and gender recognition |
+| **AWS Rekognition** | Cloud-based emotion detection via camera feeds |
+| **Azure Face API** | Microsoft's cloud AI for facial analysis |
+| **YOLOv8** | Fast real-time face detection for CCTV or crowded scenes |
+
+---
+
+## ⚠️ Things to Keep in Mind
+
+- **Privacy matters** — always get consent before analysing someone's face
+- **Not perfect** — emotions are complex; this AI reads visible expressions, not inner feelings
+- **Lighting affects accuracy** — works best in good, even lighting
+- **Use responsibly** — this technology should help people, not surveil or judge them
+
+---
+
+*Built with Python, TensorFlow, Flask, and OpenCV.*
+
