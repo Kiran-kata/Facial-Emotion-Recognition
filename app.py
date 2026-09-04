@@ -1,8 +1,15 @@
 import base64
+import os
+
 import numpy as np
 import cv2
 from flask import Flask, request, jsonify, render_template
-import tensorflow as tf
+
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    import tensorflow as tf
+    tflite = tf.lite
 
 app = Flask(__name__)
 
@@ -30,7 +37,7 @@ EMOTION_COLORS = {
 
 # Load TFLite model once at startup
 def load_model():
-    interpreter = tf.lite.Interpreter(model_path='model/ferplus_model_pd_best.tflite')
+    interpreter = tflite.Interpreter(model_path='model/ferplus_model_pd_best.tflite')
     interpreter.allocate_tensors()
     return interpreter
 
@@ -123,4 +130,5 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)

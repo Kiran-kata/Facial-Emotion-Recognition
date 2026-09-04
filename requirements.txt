@@ -1,5 +1,7 @@
 flask>=2.3.0
-tensorflow>=2.12.0
 numpy>=1.23.0
 opencv-python>=4.7.0,<5
 Pillow>=9.0.0
+gunicorn>=21.0.0
+# Use this for Render/Linux deployment; local Windows development can fall back to TensorFlow.
+tflite-runtime==2.14.0

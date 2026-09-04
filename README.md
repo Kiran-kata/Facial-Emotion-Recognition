@@ -6,6 +6,16 @@ EmoSense is a Python-based web application that identifies emotions from live we
 
 ---
 
+## Live Demo
+
+You can use the application directly in the browser without cloning the repository.
+
+- Live App: [https://your-deployed-app-url.com](https://your-deployed-app-url.com)
+
+> Replace the placeholder URL above with the actual deployment URL after hosting the app on Render, Railway, Heroku, AWS, or any other cloud platform.
+
+---
+
 ## Overview
 
 This project demonstrates how a Convolutional Neural Network (CNN) can be trained and deployed to recognize facial emotions from grayscale face crops. It is designed for experimentation, learning, and real-time demos in browser-based applications.
