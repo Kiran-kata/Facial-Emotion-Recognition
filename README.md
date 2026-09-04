@@ -8,12 +8,13 @@ EmoSense is a Python-based web application that identifies emotions from live we
 
 ## Live Demo
 
-This project is a Python Flask application with OpenCV and TensorFlow Lite inference, so it is not a static Netlify site by default.
+This project is deployed as a Python Flask web service.
 
+- Live App: https://facial-emotion-recognition-f0fl.onrender.com/
 - Local Run: `python app.py`
-- Browser URL: `[http://127.0.0.1:5000](https://facial-emotion-recognition-f0fl.onrender.com)`
+- Local Browser URL: `http://127.0.0.1:5000`
 
-> For deployment, use a Python-compatible host or a custom server setup. Standard static-site hosting like Netlify is not the right platform for this app without a server wrapper or migration to a Python-capable hosting service.
+> This is a server-based AI app, so it should be hosted on a Python-capable deployment platform like Render instead of a static hosting site.
 
 ---
 
