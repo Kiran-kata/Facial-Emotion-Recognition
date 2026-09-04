@@ -3,5 +3,5 @@ numpy>=1.23.0
 opencv-python>=4.7.0,<5
 Pillow>=9.0.0
 gunicorn>=21.0.0
-# Use this for Render/Linux deployment; local Windows development can fall back to TensorFlow.
-tflite-runtime==2.14.0
+# Keep Render on Python 3.11.x: tflite-runtime 2.14.0 does not support Python 3.14.
+tflite-runtime==2.14.0; python_version < "3.13"
