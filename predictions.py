@@ -3,104 +3,125 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+def _as_numpy_array(values):
+    if values is None:
+        return None
+    return np.asarray(values)
+
+
+def _to_integer_labels(labels):
+    labels = _as_numpy_array(labels)
+    if labels is None:
+        return None
+    if labels.ndim == 1:
+        return labels.astype(int)
+    if labels.ndim > 1 and labels.shape[-1] > 1:
+        return labels.argmax(axis = -1).astype(int)
+    return labels.astype(int)
+
+
+def _safe_class_names(class_mapping):
+    if isinstance(class_mapping, dict):
+        return list(class_mapping.values())
+    return list(class_mapping)
+
+
 def display_majority_predictions(images,
                                  labels,
                                  class_mapping,
                                  label_ps = None):
-    '''Plots majority predictions for 24 images.
-    If it does not receive predicted labels, it simply prints images with true labels.
-
-    Args:
-        images(ndarray): a batch of (48, 48, 1) images
-        labels(ndarray): a batch of basis vector labels
-        class_mapping(dict(int, string)): a mapping of class labels to class names
-        label_ps(ndarray) : a batch of predicted basis vector labels
-
-    Returns: None
+    '''Plots majority predictions for up to 24 images.
+    Works with basis-vector labels and optional predicted distributions.
     '''
-    # Convert labels to integers
-    labels = labels.argmax(axis = 1)
+    images = _as_numpy_array(images)
+    labels = _to_integer_labels(labels)
+    label_ps = _as_numpy_array(label_ps)
+
+    if images is None or labels is None:
+        raise ValueError('images and labels are required')
+
+    n_images = min(len(images), 24)
+    class_names = _safe_class_names(class_mapping)
 
     plt.figure(figsize = (12, 8))
-    for i in range(24):
+    for i in range(n_images):
         ax = plt.subplot(4, 6, i + 1)
         plt.imshow(images[i].squeeze(), cmap = 'gray')
 
-        # Print label
-        if label_ps is not None:
-            color = 'green' if np.argmax(label_ps[i]) == labels[i] else 'red'
-            label = np.argmax(label_ps[i])
-            plt.title(class_mapping[label], color = color)
+        if label_ps is not None and len(label_ps) > i:
+            predicted_label = int(np.argmax(label_ps[i]))
+            color = 'green' if predicted_label == int(labels[i]) else 'red'
+            plt.title(class_names[predicted_label], color = color)
         else:
-            label = labels[i]
-            plt.title(class_mapping[label])
+            plt.title(class_names[int(labels[i])])
 
-        plt.axis("off")
+        plt.axis('off')
+
+    plt.tight_layout()
+    plt.show()
+
 
 def display_cross_entropy_predictions(images,
                                       labels,
                                       class_mapping,
                                       label_ps = None):
-    '''Plots cross entropy predictions for 12 images.
-    If it does not receive predicted labels, it simply prints images with true
-    labels distributions.
-
-    Args:
-        images(ndarray): a batch of (48, 48, 1) images
-        labels(ndarray): a batch of (10, ) label distributions
-        class_mapping(dict(int, string)): a mapping of class labels to class names
-        label_ps(ndarray) : a batch of (10,) predicted label distributions
-
-    Returns: None
+    '''Plots cross-entropy predictions for image/label pairs.
+    Supports both true distributions and majority labels.
     '''
-    class_names = class_mapping.values()
+    images = _as_numpy_array(images)
+    labels = _as_numpy_array(labels)
+    label_ps = _as_numpy_array(label_ps)
+    class_names = _safe_class_names(class_mapping)
 
+    if images is None or labels is None:
+        raise ValueError('images and labels are required')
+
+    max_items = min(len(images), 24)
     plt.figure(figsize = (10.75, 13))
-    for i in range(0, 24, 2):
-        index = int(i / 2)
-        image = images[index]
-        label = labels[index]
+    for i in range(0, max_items, 2):
+        index = i // 2
+        if index >= min(len(images), len(labels)):
+            break
 
-        ## Draw a single plot consisting of two subplots (image + distribution)
+        image = images[index]
+        true_label = labels[index]
+
         ax1 = plt.subplot(6, 4, i + 1)
         ax2 = plt.subplot(6, 4, i + 2)
         ax1.imshow(image.squeeze(), cmap = 'gray')
         ax1.axis('off')
         y_ticks = np.arange(len(class_names))
 
-        # Draw per two bars if predictions are given
-        if label_ps is not None:
-            label = pd.DataFrame({ 'true': label, 'predicted': label_ps[i] },
-                                 index = class_names)
-            label.plot.barh(ax = ax2)
-            ax2.legend(prop = {'size':8}, loc = 'lower right')
+        if label_ps is not None and len(label_ps) > index:
+            true_series = pd.Series(true_label, index = class_names)
+            pred_series = pd.Series(label_ps[index], index = class_names)
+            pd.DataFrame({'true': true_series, 'predicted': pred_series}).plot.barh(ax = ax2)
+            ax2.legend(prop = {'size': 8}, loc = 'lower right')
         else:
-            ax2.barh(y_ticks, label)
+            ax2.barh(y_ticks, true_label)
 
         ax2.set_aspect(0.12)
         ax2.set_yticks(y_ticks)
         ax2.set_yticklabels(class_names)
         ax2.set_xlim(0, 1)
-        ax2.invert_yaxis()  # Labels read top-to-bottom
+        ax2.invert_yaxis()
 
     plt.tight_layout()
     plt.show()
 
+
 def plot_training_history(history):
-    '''Plots training accuracy and loss.
+    '''Plots training accuracy and loss from a history dict or Keras History object.'''
+    if hasattr(history, 'history'):
+        history = history.history
 
-    Args:
-        history(Object): history object resulting from training
+    training_accuracy = history.get('accuracy', history.get('acc', []))
+    validation_accuracy = history.get('val_accuracy', history.get('val_acc', []))
+    training_loss = history.get('loss', [])
+    validation_loss = history.get('val_loss', [])
 
-    Returns: None
-    '''
-    training_accuracy = history['accuracy']
-    validation_accuracy = history['val_accuracy']
-
-    training_loss = history['loss']
-    validation_loss = history['val_loss']
-
-    epochs_range = range(len(training_accuracy))
+    epochs_range = range(len(training_accuracy) if training_accuracy else len(training_loss))
 
     plt.figure(figsize = (8, 8))
     plt.subplot(1, 2, 1)
@@ -116,30 +137,21 @@ def plot_training_history(history):
     plt.title('Training and Validation Loss')
     plt.show()
 
+
 def plot_confusion_matrix(confusion_matrix, class_names):
-    '''Plots confusion matrix.
-
-    Args:
-        confusion_matrix(list of lists)
-        class_names(list): Class names which will be plotted along axes
-
-    Returns: None
-    '''
-    sns.set(color_codes = True)
+    '''Plots confusion matrix.'''
+    sns.set_theme(style = 'white')
     plt.figure(1, figsize = (10, 7))
-
     plt.title('Confusion Matrix')
 
-    sns.set(font_scale = 1.)
     ax = sns.heatmap(data = confusion_matrix,
                      annot = True,
-                     cmap = "YlGnBu",
+                     cmap = 'YlGnBu',
                      cbar_kws = {'label': 'Scale'},
                      fmt = '4d')
 
     ax.set_xticklabels(class_names, rotation = -30)
     ax.set_yticklabels(class_names, rotation = -30)
-
-    ax.set(ylabel = "True Label", xlabel = "Predicted Label")
+    ax.set(ylabel = 'True Label', xlabel = 'Predicted Label')
 
     plt.show()

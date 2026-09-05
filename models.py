@@ -1,7 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential, Model
-
+from tensorflow.keras.models import Model
 from tensorflow.keras.regularizers import l2
 
 
@@ -13,18 +12,22 @@ def get_smart_model(input,
                     n_classes = 8,
                     logits = False):
 
+    if input is None:
+        input = layers.Input(shape = input_shape)
+
     regularization = l2(regularization_rate)
 
     x = layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
-                               padding = 'same',
-                               input_shape = input_shape)(input)
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
+                               padding = 'same')(input)
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU(leaky_relu_slope)(x)
     x = layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D((2, 2))(x)
@@ -33,13 +36,15 @@ def get_smart_model(input,
 
     x = layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU(leaky_relu_slope)(x)
     x = layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D((2, 2))(x)
@@ -48,13 +53,15 @@ def get_smart_model(input,
 
     x = layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU(leaky_relu_slope)(x)
     x = layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D((2, 2))(x)
@@ -63,13 +70,15 @@ def get_smart_model(input,
 
     x = layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.LeakyReLU(leaky_relu_slope)(x)
     x = layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same')(x)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D((2, 2))(x)
@@ -82,8 +91,7 @@ def get_smart_model(input,
     if not logits:
         output = layers.Softmax()(output)
 
-    model = Model(input, output)
-    return model
+    return Model(input, output)
 
 
 def get_base_model(leaky_relu_slope,
@@ -96,16 +104,18 @@ def get_base_model(leaky_relu_slope,
     regularization = l2(regularization_rate)
 
     model = keras.Sequential([
+        layers.Input(shape = input_shape),
         layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
-                               padding = 'same',
-                               input_shape = input_shape),
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
+                               padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -114,13 +124,15 @@ def get_base_model(leaky_relu_slope,
 
         layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -129,13 +141,15 @@ def get_base_model(leaky_relu_slope,
 
         layers.SeparableConv2D(192,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(192,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -144,7 +158,8 @@ def get_base_model(leaky_relu_slope,
 
         layers.SeparableConv2D(384,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -156,7 +171,7 @@ def get_base_model(leaky_relu_slope,
     ])
 
     if not logits:
-        model.append(layers.Softmax())
+        model.add(layers.Softmax())
 
     return model
 
@@ -171,22 +186,25 @@ def get_performance_model(leaky_relu_slope,
     regularization = l2(regularization_rate)
 
     model = keras.Sequential([
+        layers.Input(shape = input_shape),
         layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
-                               padding = 'same',
-                               input_shape = input_shape),
-        layers.BatchNormalization(),
-        layers.LeakyReLU(leaky_relu_slope),
-        layers.SeparableConv2D(48,
-                               (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(48,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
+                               padding = 'same'),
+        layers.BatchNormalization(),
+        layers.LeakyReLU(leaky_relu_slope),
+        layers.SeparableConv2D(48,
+                               (3, 3),
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -195,19 +213,22 @@ def get_performance_model(leaky_relu_slope,
 
         layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(96,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -216,13 +237,15 @@ def get_performance_model(leaky_relu_slope,
 
         layers.SeparableConv2D(192,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.LeakyReLU(leaky_relu_slope),
         layers.SeparableConv2D(192,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -231,7 +254,8 @@ def get_performance_model(leaky_relu_slope,
 
         layers.SeparableConv2D(384,
                                (3, 3),
-                               kernel_regularizer = regularization,
+                               depthwise_regularizer = regularization,
+                               pointwise_regularizer = regularization,
                                padding = 'same'),
         layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
@@ -243,6 +267,6 @@ def get_performance_model(leaky_relu_slope,
     ])
 
     if not logits:
-        model.append(layers.Softmax())
+        model.add(layers.Softmax())
 
     return model

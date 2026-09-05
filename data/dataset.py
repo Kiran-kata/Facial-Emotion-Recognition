@@ -1,6 +1,7 @@
 import csv
 from itertools import islice
 import os
+from pathlib import Path
 import pandas as pd
 
 
@@ -15,7 +16,18 @@ COLUMN_NAMES = ['dataset', 'image', 'fer_code', 'neutral', 'happiness', \
 'no-face']
 
 
-def get_dataset_dict(dataset_dir = '../dataset',
+def _resolve_dataset_dir(dataset_dir = None):
+    """Resolve the dataset directory relative to the project root."""
+    if dataset_dir is None:
+        dataset_dir = Path(__file__).resolve().parents[1] / 'dataset'
+    else:
+        dataset_dir = Path(dataset_dir).expanduser()
+        if not dataset_dir.is_absolute():
+            dataset_dir = (Path(__file__).resolve().parents[1] / dataset_dir)
+    return str(dataset_dir)
+
+
+def get_dataset_dict(dataset_dir = None,
                      fer_file_name = 'fer2013.csv',
                      fer_plus_file_name = 'fer2013new.csv'):
     '''Reads the output data csv (creates it first if it doesn't exist) into a
@@ -28,8 +40,15 @@ def get_dataset_dict(dataset_dir = '../dataset',
 
     Returns: a dictionary of three dataset dataframes ('train', 'valid', 'test').
     '''
-    # Check if the output csv dataset exists
+    dataset_dir = _resolve_dataset_dir(dataset_dir)
     dataset_path = os.path.join(dataset_dir, UNIFIED_DATASET_FILE_NAME)
+
+    if not os.path.isdir(dataset_dir):
+        raise FileNotFoundError(
+            f"Dataset directory not found: {dataset_dir}. "
+            "Place FER/FER+ CSV files in the project's dataset folder."
+        )
+
     if os.path.isfile(dataset_path):
         dataset_df = read_dataset_csv(dataset_dir)
     else:
@@ -41,7 +60,8 @@ def get_dataset_dict(dataset_dir = '../dataset',
             'valid' : dataset_df.loc[dataset_df['dataset'] == 'valid'],
             'test' : dataset_df.loc[dataset_df['dataset'] == 'test']}
 
-def read_dataset_csv(dataset_dir = './'):
+
+def read_dataset_csv(dataset_dir = None):
     '''Reads into a dataframe a previously generated output dataset csv file.
 
     Args:
@@ -49,10 +69,14 @@ def read_dataset_csv(dataset_dir = './'):
 
     Returns: a dataframe containing output dataset.
     '''
+    dataset_dir = _resolve_dataset_dir(dataset_dir)
     dataset_path = os.path.join(dataset_dir, UNIFIED_DATASET_FILE_NAME)
+    if not os.path.isfile(dataset_path):
+        raise FileNotFoundError(f"Unified dataset file not found: {dataset_path}")
     return pd.read_csv(dataset_path)
 
-def _generate_dataset_csv(dataset_dir = '../dataset',
+
+def _generate_dataset_csv(dataset_dir = None,
                           fer_file_name = 'fer2013.csv',
                           fer_plus_file_name = 'fer2013new.csv'):
     '''Generates output dataset csv file out of original fer and fer plus files.
@@ -65,10 +89,17 @@ def _generate_dataset_csv(dataset_dir = '../dataset',
 
     Returns: a dataframe contatining output dataset.
     '''
+    dataset_dir = _resolve_dataset_dir(dataset_dir)
+
     # File paths
     fer_path = os.path.join(dataset_dir, fer_file_name)
     ferplus_path = os.path.join(dataset_dir, fer_plus_file_name)
     dataset_path = os.path.join(dataset_dir, UNIFIED_DATASET_FILE_NAME)
+
+    if not os.path.isfile(fer_path):
+        raise FileNotFoundError(f"FER dataset file not found: {fer_path}")
+    if not os.path.isfile(ferplus_path):
+        raise FileNotFoundError(f"FER+ dataset file not found: {ferplus_path}")
 
     # Create writer
     output_file = open(dataset_path, 'w')
